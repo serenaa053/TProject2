@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TProject">
+
+	 <!-- 회원가입 -->
+	 <insert id="MEMBERS" parameterType="com.ict.edu_D.signup_in_VO" >
+	 	insert into MEMBERS(COMID,IDX,PW,USERNAME,BIRTHDATE,ABODE,TELEPHONE,PHONE,JOINDATE,EMAIL)  
+	 	 values(COMID_SEQ.NEXTVAL ,#{IDX},#{PW},#{USERNAME},#{BIRTHDATE},#{ABODE},#{TELEPHONE},#{PHONE},#{JOINDATE},#{EMAIL})
+	 </insert> <!-- 실행뒤 호출한놈으로 출발 DAO -->
+	 
+	 
+	 <insert id="MEMBERS_addinfo" parameterType="com.ict.edu_D.InfoVO" >
+	 	insert into INFO(IDX,USERNAME)  
+	 	values(#{idx},#{username})
+	 </insert> 
+	 
+	 
+	 <!-- 사원번호 출력  -->
+	 <select id="COMID" parameterType="String" resultType="int">
+	 	SELECT COMID
+	 	FROM MEMBERS
+	 	WHERE IDX = #{IDX}
+	 </select>
+	 
+      <!-- 사원번호 테이블 저장  -->
+	  <insert id="COMID_ins" parameterType="com.ict.edu_D.InfoVO" >
+	 	insert into INFO(COMID)  
+	 	values(#{comid}) WHERE IDX = #{idx}
+	 </insert> <!-- 실행뒤 호출한놈으로 출발 DAO -->
+	 
+	 <!--  ID 중복체크  -->
+	 <select id="overlap" parameterType="String" resultType="int"> 
+    	SELECT COUNT(*) 
+     	FROM MEMBERS 
+     	WHERE IDX = #{IDX} 
+     </select> 
+
+	<!-- 급여조회 -->
+	<select id="fact" resultType="com.ict.edu_D.Pay_VO">
+	SELECT M.USERNAME, I.DIVISION ,
+		I.JPOSITION ,P.COMID , P.Basic_1, P.basic_1, P.job_1, P.extend_1, P.holiday,
+		P.bonus, P.guitar, P.lunch, P.traffic, P.welfare, P.NULL1, P.NULL2,
+		P.salary, P.income, P.citizen, P.ins, P.pension, P.cottage, P.health,
+		P.NULL3, P.NULL4, P.NULL5, P.NULL6, P.subtract, P.TOTAL
+		FROM MEMBERS M, INFO I, PAY P 
+		WHERE M.IDX = I.IDX and I.IDX = P.IDX and M.IDX = #{IDX}
+    </select> 
+	
+	
+	<!-- 관리자 선정 급여조회 -->
+	<select id="fact_A" resultType="com.ict.edu_D.Pay_VO">
+	SELECT M.USERNAME, I.DIVISION ,
+		I.JPOSITION ,P.COMID , P.Basic_1, P.basic_1, P.job_1, P.extend_1, P.holiday,
+		P.bonus, P.guitar, P.lunch, P.traffic, P.welfare, P.NULL1, P.NULL2,
+		P.salary, P.income, P.citizen, P.ins, P.pension, P.cottage, P.health,
+		P.NULL3, P.NULL4, P.NULL5, P.NULL6, P.subtract, P.TOTAL
+		FROM MEMBERS M, INFO I, PAY P 
+		WHERE M.COMID = I.COMID and I.COMID = P.COMID and M.COMID = #{COMID}
+    </select> 
+	
+	
+	<!-- 급여 업데이트  -->
+	<update id="pay_getUppay" parameterType="com.ict.edu_D.Pay_VO">
+        UPDATE PAY 
+        SET 
+        Basic_1 = #{basic_1}, Job_1 = #{job_1}, Extend_1 = #{extend_1}, Holiday = #{holiday}, Bonus = #{bonus}, Guitar = #{guitar},
+        Lunch = #{lunch}, Traffic = #{traffic}, Welfare = #{welfare}, 
+        Salary = #{salary}, Income = #{income}, Citizen = #{citizen},
+        Ins = #{ins}, Pension = #{pension}, Cottage = #{cottage}, Health = #{health},
+        Subtract = #{subtract}, TOTAL = #{TOTAL}
+        where USERNAME = #{USERNAME}
+    </update>
+	
+	 <!--  로그인 아이디 유무체크  -->
+	<select id="login_ID" parameterType="String" resultType="int">
+		SELECT COUNT(*) 
+		FROM MEMBERS
+		WHERE IDX = #{IDX}
+	</select>
+	
+	<!--  로그인 비밀번호 유무체크  -->
+	<select id="login_PW" parameterType="String" resultType="String">
+		SELECT PW
+		FROM MEMBERS
+		WHERE IDX = #{IDX}
+	</select>
+	
+
+<!-- 민석이형 -->
+    <!-- 기본정보 -->
+    <!-- 기본정보 불러오기 -->
+    <select id="Info_memList" resultType="com.ict.edu_D.MembersVO"> <!-- parameterType="String" 없네... -->
+        SELECT  M.USERNAME, M.COMID, M.JOINDATE, I.JPOSITION, I.DIVISION, M.PHONE, M.EMAIL, I.IMGUPDATE
+        FROM     MEMBERS M, INFO I
+        WHERE    M.IDX = I.IDX and M.IDX = #{IDX}
+    </select>
+
+    <!-- 사진 업데이트하기 -->
+    <update id="Info_ImgUpdate" parameterType="string">
+        UPDATE INFO SET IMGUPDATE = #{imgupdate} where IDX = #{IDX}
+    </update>
+
+    <!-- 정보 업데이트 하기(Member Table)  -->
+    <update id="Info_Update_MemberVO" parameterType="com.ict.edu_D.MembersVO">
+     update  MEMBERS set USERNAME = #{USERNAME}, PHONE = #{PHONE}, EMAIL = #{EMAIL} where IDX = #{IDX}
+    </update>
+
+    <!-- 정보 업데이트 하기(Info Table)  -->
+    <update id="Info_Update_InfoVO" parameterType="com.ict.edu_D.InfoVO">
+     update  info set jposition = #{jposition}, division = #{division} where IDX = #{idx}
+    </update>
+    <!-- 기본정보 끝 -->	
+    
+    
+    <!-- 공지창 -->
+    <!-- 공지 메인 가져오기 -->
+    <select id="Noti_notimainList"
+resultType="com.ict.edu_D.NotimainVO">
+        SELECT NTITLE, NCONTENTS,NDATE,  NCOUNT,NUSERNAME, 
+        NIMPORTANT, NNUMBER FROM
+        NOTI WHERE NDELETE = '0' ORDER BY NIMPORTANT
+        DESC
+    </select>
+    
+	<!-- 공지사항 등록하기 -->
+    <insert id="Noti_wri" parameterType="com.ict.edu_D.NotiVO">
+        INSERT INTO NOTI(NNUMBER,
+        NTITLE, NCONTENTS, NIMPORTANT, NUSERNAME,
+        COMID, NDATE)
+        VALUES(NOTINUMBER_SEQ.NEXTVAL, #{ntitle}, #{ncontents},
+        #{nimportant},
+        #{nusername}, #{comid}, #{ndate})
+    </insert>
+
+    <!-- 공지카운트 DB 올리기 -->
+    <update id="Noti_ncount" parameterType="com.ict.edu_D.NotiVO">
+        UPDATE NOTI SET NCOUNT =
+        #{ncount} where NTITLE = #{ntitle}
+    </update>
+
+    <!-- 공지 삭제 -->
+    <update id="Noti_delete" parameterType="com.ict.edu_D.NotiVO">
+        UPDATE NOTI SET NDELETE =
+        #{ndelete} where NNUMBER = #{nnumber}
+    </update>
+
+    <!-- 공지 수정 -->
+    <update id="Noti_update" parameterType="com.ict.edu_D.NotiVO">
+        UPDATE NOTI SET NTITLE =
+        #{ntitle}, NCONTENTS = #{ncontents}, NIMPORTANT =
+        #{nimportant} where
+        NNUMBER = #{nnumber}
+    </update>
+
+    <!-- 공지창 끝 -->
+    
+    <!-- 관리자창 아이디에 맞는 기본정보 불러오기 -->
+    <select id="Admin_InfomemList" resultType="com.ict.edu_D.MembersVO">
+        SELECT M.USERNAME, M.COMID,
+        M.JOINDATE, I.JPOSITION, I.DIVISION, M.PHONE,
+        M.EMAIL, I.IMGUPDATE
+        FROM
+        MEMBERS M, INFO I
+        WHERE M.COMID = I.COMID and M.COMID = #{COMID}
+    </select>
+    
+    <!-- 관리자 =============================== -->
+    <!-- 관리자 전체 목록 조회 및 검색하기 
+    -->
+	<select id="adList" parameterType="String" resultType="com.ict.edu_D.AdVO"> 
+		SELECT 
+		    MEMBERS.COMID,
+		    INFO.DIVISION,
+		    INFO.JPOSITION,
+		    MEMBERS.USERNAME
+		FROM 
+		    MEMBERS, INFO 
+		WHERE 
+			INFO.COMID = MEMBERS.COMID
+			<if test ="searchText != null"> 
+		    AND 
+		    (
+		    	MEMBERS.COMID LIKE  '%' ||  #{searchText} || '%'
+		    	or MEMBERS.USERNAME LIKE '%' ||  #{searchText} || '%'
+		    	or INFO.DIVISION LIKE '%' ||  #{searchText} || '%'
+		    	or INFO.JPOSITION LIKE '%' ||  #{searchText} || '%'
+		    )
+		    </if>
+		ORDER BY MEMBERS.COMID
+	</select>
+	<!-- 관리자 끝 ============================  -->
+
+    <!-- 연차 ================================ -->
+    
+    <!-- 연차 사용자 불러오기 InfoData  -->
+    <select id="InfoData" resultType="com.ict.edu_D.MembersVO" parameterType="String">
+		SELECT 
+			M.USERNAME, M.COMID, TO_CHAR(M.JOINDATE, 'YYYY/MM/DD') AS JOINDATE,
+			I.JPOSITION, I.DIVISION
+		FROM 
+			MEMBERS M, INFO I
+		WHERE M.COMID = I.COMID and M.COMID =  #{comid}
+	</select>
+	
+    
+  <!-- 연차 조회 불러오기 (두번째 테이블)-->
+    <select id="annData" resultType="com.ict.edu_D.AnnVO" parameterType="String">
+		SELECT 
+		    COMID, YEARANN, 
+		    CASE WHEN (NEWANN > 25) THEN 25 ELSE NEWANN END AS NEWANN,
+		    USEDANN,
+		    ((CASE WHEN NEWANN > 25 THEN 25 ELSE NEWANN END) - USEDANN) AS REMAIN
+		FROM (
+		    SELECT 
+		    ME.COMID,
+		    TO_CHAR(SYSDATE, 'YYYY') AS YEARANN,
+		    TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) - TO_NUMBER(TO_CHAR(ME.JOINDATE, 'YYYY'))+15 AS NEWANN,
+		    (SELECT COUNT(*) FROM USEDANNUAL UA WHERE UA.COMID = ME.COMID 
+		        AND TO_NUMBER(TO_CHAR(UA.USEDDATE, 'YYYY')) = TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY'))
+		    )AS USEDANN
+		 FROM MEMBERS ME
+		 WHERE ME.COMID = #{comid}
+		)
+    </select>
+
+	  
+ <!-- 연차: 연차 사용내역 리스트 조회  불러오기 -->
+    <select id="annHistoryList" resultType="com.ict.edu_D.AnnVO" parameterType="String">
+    	SELECT 
+		    COMID,
+		    TO_CHAR(USEDDATE, 'YY/MM/DD') AS USEDDATE,
+		    1 AS USEDCNT
+		FROM 
+		    USEDANNUAL
+		WHERE COMID = #{comid}
+    </select>
+ 
+    
+    <!-- 연차 (관리자): 사용내역 삭제하기 -->
+    <delete id="deleteAnnUsedDate" parameterType="com.ict.edu_D.AnnVO">
+		DELETE FROM USEDANNUAL
+		WHERE COMID = #{comid}
+		AND TO_CHAR(USEDDATE) = #{selused_date}
+	</delete>
+
+    
+    <!-- 연차 유저에서!! : 연차사용날짜useddate 입력하기  -->
+     <insert id="insertUsedDate" parameterType="com.ict.edu_D.AnnVO">
+		INSERT INTO 
+		    USEDANNUAL(USEDDATE, COMID)
+		VALUES
+		   (#{used_DateB}, #{comid})
+	 </insert>
+	
+	<!-- 연차 끝 =============================  -->
+	
+	<!-- 근퇴 -->
+		 <!-- 유저용 사원 한명, 특정 하루날짜 조회 -->
+	 <select id="WorkDayOne" resultType="com.ict.edu_D.WorkVO" >
+	 	<!-- select * from Work order by comid = #{comid} -->
+	 	select * from Work where comid = #{comid}
+	 </select>
+	 
+	 <!-- 기간을 정해서 출퇴근 기록을 검색하자 -->
+	 <select id="WorkDayList" parameterType="com.ict.edu_D.WorkVO" resultType="com.ict.edu_D.WorkVO">
+         select * from Work where dates between TO_DATE(#{serch1},
+          'YYYY/MM/DD') and TO_DATE(#{serch2},'YYYY/MM/DD') AND comid = #{comid}
+     </select>
+	 
+	 <!-- 추가 출근을 찍어 DB에 정보를 넣자 -->
+	 <insert id="WorkInsGo" parameterType="com.ict.edu_D.WorkVO">
+	 	insert into Work(WorkNumber, comid, dates, username, gotime, byetime)  
+	 	 values(Work_seq.nextval, #{comid}, TO_DATE(#{dates},'YYYY/MM/DD HH24:MI:SS'),
+	 	  #{username}, TO_DATE(#{gotime},'YYYY/MM/DD HH24:MI:SS'), null)
+	 </insert>
+	 
+	 <!-- 수정(추가) 퇴근시간을 넣자 -->
+	 <update id="WorkUpdateBye" parameterType="com.ict.edu_D.WorkVO" >
+	 	update Work set byetime = TO_DATE(#{byetime},'YYYY/MM/DD HH24:MI:SS')
+	 	 where comid = #{comid} and WorkNumber = (select max(WorkNumber) from
+	 	  Work where comid = #{comid})
+	 </update>
+	 
+	 <!-- 근퇴 끝-->
+	
+</mapper>
